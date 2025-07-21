@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>인물 맞추기 게임</title>
+    <style>
+        :root { --primary-color: #007bff; --dark-color: #333; --light-color: #f4f4f4; --danger-color: #dc3545; --success-color: #28a745; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: 'Malgun Gothic', sans-serif; background-color: #f0f0f0; }
+        .hidden { display: none !important; }
+
+        .container { display: flex; justify-content: center; align-items: center; width: 100%; min-height: 100vh; padding: 15px; }
+        .page { width: 100%; max-width: 500px; text-align: center; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        h1, h2, p, .btn { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        h1 { font-size: 2.2em; color: var(--dark-color); margin-bottom: 10px; }
+        h2 { font-size: 1.8em; color: var(--dark-color); margin-bottom: 20px; border-bottom: 2px solid var(--light-color); padding-bottom: 10px; }
+        p { color: #666; margin-bottom: 25px; }
+
+        .btn { display: inline-block; padding: 12px 25px; font-size: 1.1em; font-weight: bold; color: white; border: none; border-radius: 30px; cursor: pointer; text-decoration: none; transition: all 0.3s; margin: 5px; }
+        .btn-primary { background-color: var(--primary-color); }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-success { background-color: var(--success-color); }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-group { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 90%; width: 400px; }
+        #game-mode-list { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        #game-mode-list .btn { width: 100%; }
+
+        #game-page {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            background-color: #2a2a2a;
+        }
+        #info-bar {
+            flex-shrink: 0;
+            width: 100%; 
+            padding: 0 20px; 
+            background-color: var(--dark-color); 
+            color: white; 
+            min-height: 80px; 
+            display: grid;
+            grid-template-columns: 50px 1fr 50px;
+            align-items: center;
+            transition: background-color 0.3s ease-in-out; /* 색상 변경 애니메이션 */
+        }
+        /* ▼▼▼ 이름 공개 시 적용될 스타일 추가 ▼▼▼ */
+        #info-bar.name-revealed {
+            background-color: var(--success-color); /* 밝은 초록색으로 변경 */
+        }
+        /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+        #info-text {
+            grid-column: 2;
+            font-size: 1.5em; 
+            font-weight: bold;
+            text-align: center;
+        }
+        #exit-btn {
+            grid-column: 3;
+            justify-self: end;
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 2.5em;
+            font-weight: 300;
+            width: 44px;
+            height: 44px;
+            line-height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #exit-btn:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        #image-container { 
+            flex-grow: 1;
+            position: relative; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            width: 100%;
+            cursor: pointer; 
+            overflow: hidden;
+        }
+        #person-image { 
+            width: 100%;
+            height: 100%;
+            border-radius: 15px; 
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+            object-fit: cover; 
+        }
+
+        /* 관리 페이지 스타일 */
+        .management-section { margin-bottom: 30px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--light-color); border-radius: 8px; margin-bottom: 8px; word-break: break-all; }
+        .list-item span { font-weight: bold; font-size: 1.1em; text-align: left; flex-grow: 1; }
+        .list-item .btn-group { margin: 0; flex-shrink: 0; margin-left: 10px; }
+        .list-item .btn { padding: 5px 10px; font-size: 0.9em; }
+        .form-group { margin-top: 20px; }
+        .form-group label { display: block; margin-bottom: 10px; font-weight: bold; color: #555; }
+        .form-group select, .form-group input[type="file"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
+        #data-management-area { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+        #data-management-area .btn { font-size: 0.9em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="start-page" class="page">
+        <h1>인물 맞추기 게임</h1>
+        <p>게임을 시작하거나, 인물/분류를 관리하세요.</p>
+        <div class="btn-group">
+            <button id="start-game-btn" class="btn btn-primary">게임 시작</button>
+            <button id="manage-data-btn" class="btn btn-secondary">게임 관리</button>
+        </div>
+    </div>
+    <div id="management-page" class="page hidden">
+        <h2>게임 관리</h2>
+        <div class="management-section"><h3>분류 관리</h3><div id="category-list"></div><button id="add-category-btn" class="btn btn-success">새 분류 추가</button></div>
+        <div class="management-section"><h3>인물 사진 관리</h3><div id="photo-list-container" class="hidden"><h4 id="photo-list-title"></h4><div id="photo-list"></div></div><div class="form-group"><label for="category-select">사진 추가할 분류 선택:</label><select id="category-select"></select><label for="photo-upload" style="margin-top: 15px;">업로드할 사진 선택 (여러 개 선택 가능):</label><input type="file" id="photo-upload" accept="image/*" multiple><button id="add-photo-btn" class="btn btn-success" style="margin-top: 15px;">선택한 사진 추가</button></div></div>
+        <div id="data-management-area"><h3>데이터 백업/복구</h3><p style="font-size:0.8em; margin-bottom:10px;">브라우저 캐시 삭제 등에 대비해 데이터를 파일로 저장하거나, 저장된 파일로 복구할 수 있습니다.</p><button id="export-data-btn" class="btn btn-primary">데이터 내보내기</button><input type="file" id="import-data-input" class="hidden" accept=".json"><button id="import-data-btn" class="btn btn-secondary">데이터 가져오기</button></div>
+        <hr style="margin: 30px 0;"><button id="back-to-start-btn" class="btn btn-primary">메인으로 돌아가기</button>
+    </div>
+</div>
+<div id="game-page" class="hidden">
+    <div id="info-bar">
+        <span id="info-text"></span>
+        <button id="exit-btn" title="나가기">&times;</button>
+    </div>
+    <div id="image-container">
+        <img id="person-image" src="" alt="인물 사진">
+    </div>
+</div>
+<div id="game-mode-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2>게임 모드 선택</h2>
+        <div id="game-mode-list"></div>
+        <button id="cancel-modal-btn" class="btn btn-danger">취소</button>
+    </div>
+</div>
+
+<script>
+const DB_NAME = "personGameDB", DB_VERSION = 1, CATEGORY_STORE = "categories", PHOTO_STORE = "photos";
+let db;
+function performTransaction(t, e, n) { return new Promise(((o, a) => { const r = db.transaction(t, e); r.oncomplete = t => o(t), r.onerror = t => a(t.target.error), n(r) })) }
+function initDB() { return new Promise(((t, e) => { const n = indexedDB.open(DB_NAME, DB_VERSION); n.onerror = t => e("DB 에러: " + t.target.errorCode), n.onsuccess = e => { db = e.target.result, t() }, n.onupgradeneeded = t => { let e = t.target.result; e.objectStoreNames.contains(CATEGORY_STORE) || e.createObjectStore(CATEGORY_STORE, { keyPath: "name" }), e.objectStoreNames.contains(PHOTO_STORE) || e.createObjectStore(PHOTO_STORE, { keyPath: "id", autoIncrement: !0 }).createIndex("category", "category", { unique: !1 }) } })) }
+const pages = { start: document.getElementById("start-page"), game: document.getElementById("game-page"), management: document.getElementById("management-page") },
+    gameModeModal = document.getElementById("game-mode-modal");
+function showPage(t) { document.getElementById("start-page").classList.add("hidden"), document.getElementById("management-page").classList.add("hidden"), document.getElementById("game-page").classList.add("hidden"); const e = document.querySelector(".container"); "start" === t || "management" === t ? (e.style.display = "flex", pages[t].classList.remove("hidden")) : "game" === t && (e.style.display = "none", pages[t].classList.remove("hidden")) }
+async function addCategory(t) { if (!t || !t.trim()) return void alert("분류 이름을 입력해주세요."); try { await performTransaction([CATEGORY_STORE], "readwrite", (e => e.objectStore(CATEGORY_STORE).add({ name: t.trim() }))), await renderCategories() } catch (t) { "ConstraintError" === t.name ? alert("이미 존재하는 분류 이름입니다.") : (console.error("분류 추가 오류:", t), alert("분류 추가 중 오류가 발생했습니다.")) } }
+function getCategories() { return new Promise(((t, e) => { performTransaction([CATEGORY_STORE], "readonly", (n => { n.objectStore(CATEGORY_STORE).getAll().onsuccess = e => t(e.target.result) })).catch(e) })) }
+async function updateCategory(t, e) { if (!e || !e.trim()) return void alert("새 분류 이름을 입력해주세요."); try { await performTransaction([CATEGORY_STORE, PHOTO_STORE], "readwrite", (n => { const o = n.objectStore(CATEGORY_STORE); o.delete(t), o.add({ name: e.trim() }); const a = n.objectStore(PHOTO_STORE).index("category").openCursor(IDBKeyRange.only(t)); a.onsuccess = t => { const n = t.target.result; if (n) { const t = n.value; t.category = e.trim(), n.update(t), n.continue() } } })), await renderCategories(), document.getElementById("photo-list-container").classList.add("hidden") } catch (t) { "ConstraintError" === t.name ? alert("이미 존재하는 분류 이름입니다.") : (console.error("분류 업데이트 오류:", t), alert("분류 업데이트 중 오류가 발생했습니다.")) } }
+async function deleteCategory(t) { if (!confirm(`'${t}' 분류를 정말로 삭제하시겠습니까?\n이 분류에 속한 모든 사진도 함께 삭제됩니다.`)) return; await performTransaction([CATEGORY_STORE, PHOTO_STORE], "readwrite", (e => { e.objectStore(CATEGORY_STORE).delete(t); const n = e.objectStore(PHOTO_STORE).index("category").openCursor(IDBKeyRange.only(t)); n.onsuccess = t => { const e = t.target.result; e && (e.delete(), e.continue()) } })), await renderCategories(), document.getElementById("photo-list-container").classList.add("hidden") }
+async function addPhoto(t, e) { const n = e.name.split(".").slice(0, -1).join(".") || e.name; return performTransaction([PHOTO_STORE], "readwrite", (o => { o.objectStore(PHOTO_STORE).add({ category: t, name: n, imageData: e }) })) }
+function getPhotos(t) { return new Promise(((e, n) => { performTransaction([PHOTO_STORE], "readonly", (o => { o.objectStore(PHOTO_STORE).index("category").getAll(t).onsuccess = t => e(t.target.result) })).catch(n) })) }
+function getAllPhotos() { return new Promise(((t, e) => { performTransaction([PHOTO_STORE], "readonly", (n => { n.objectStore(PHOTO_STORE).getAll().onsuccess = e => t(e.target.result) })).catch(e) })) }
+async function deletePhoto(t, e) { if (!confirm("이 사진을 정말 삭제하시겠습니까?")) return; await performTransaction([PHOTO_STORE], "readwrite", (e => e.objectStore(PHOTO_STORE).delete(t))), await renderPhotos(e) }
+async function renderCategories() {
+    const t = await getCategories(), e = document.getElementById("category-list"), n = document.getElementById("category-select");
+    e.innerHTML = "", n.innerHTML = '<option value="">-- 선택 --</option>', t.sort(((t, e) => t.name.localeCompare(e.name, "ko"))).forEach((t => {
+        const o = document.createElement("div"); o.className = "list-item", o.innerHTML = `<span class="category-name">${t.name}</span><div class="btn-group"><button class="btn btn-primary btn-sm view-photos-btn">사진 보기</button><button class="btn btn-secondary btn-sm edit-category-btn">수정</button><button class="btn btn-danger btn-sm delete-category-btn">삭제</button></div>`, e.appendChild(o);
+        const a = document.createElement("option"); a.value = t.name, a.textContent = t.name, n.appendChild(a) })) }
+async function renderPhotos(t) {
+    const e = await getPhotos(t), n = document.getElementById("photo-list-container"), o = document.getElementById("photo-list-title"), a = document.getElementById("photo-list");
+    o.textContent = `'${t}' 분류의 사진들`, a.innerHTML = "", 0 === e.length ? a.innerHTML = '<p style="margin-top:10px;">등록된 사진이 없습니다.</p>' : e.forEach((t => {
+        const e = document.createElement("div"); e.className = "list-item", e.innerHTML = `<span>${t.name}</span><button class="btn btn-danger btn-sm delete-photo-btn" data-id="${t.id}" data-category="${t.category}">삭제</button>`, a.appendChild(e) })), n.classList.remove("hidden") }
+
+let gameData = [], currentIndex = 0, isNameRevealed = !1;
+async function startGame(t=null){if(gameModeModal.classList.add("hidden"),gameData=t?await getPhotos(t):await getAllPhotos(),0===gameData.length){const e=t?`'${t}' 분류에 등록된 사진이 없습니다.`:"게임에 등록된 사진이 없습니다. 먼저 [게임 관리]에서 사진을 추가해주세요.";return void alert(e)}gameData.sort((()=>.5-Math.random())),currentIndex=0,showPage("game"),showPerson(currentIndex)}
+
+// ▼▼▼ 로직 수정: 색상 초기화 추가 ▼▼▼
+function showPerson(t) {
+    const e = gameData[t];
+    const n = document.getElementById("info-bar");
+    const o = document.getElementById("info-text");
+    const a = document.getElementById("person-image");
+    
+    n.classList.remove("name-revealed"); // 상단 바 색상 초기화
+    o.textContent = e.category;
+
+    a.dataset.currentUrl && URL.revokeObjectURL(a.dataset.currentUrl);
+    const r = URL.createObjectURL(e.imageData);
+    a.src = r, a.dataset.currentUrl = r, isNameRevealed = !1
+}
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+// ▼▼▼ 로직 수정: 색상 변경 추가 ▼▼▼
+document.getElementById("image-container").addEventListener("click", (() => {
+    if (0 === gameData.length) return;
+    if (isNameRevealed) {
+        if (currentIndex++, currentIndex >= gameData.length) {
+            const t = confirm("모든 인물을 다 보셨습니다!\n게임을 다시 시작하시겠습니까?\n\n[확인] = 다시하기\n[취소] = 나가기");
+            t ? (gameData.sort((() => .5 - Math.random())), currentIndex = 0, showPerson(currentIndex)) : showPage("start")
+        } else showPerson(currentIndex)
+    } else {
+        document.getElementById("info-bar").classList.add("name-revealed"); // 상단 바 색상 변경
+        document.getElementById("info-text").textContent = gameData[currentIndex].name, isNameRevealed = !0
+    }
+}));
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+document.addEventListener("DOMContentLoaded", (async () => { try { await initDB(), showPage("start") } catch (t) { alert("오류가 발생하여 앱을 시작할 수 없습니다."), console.error(t) } }));
+document.getElementById("start-game-btn").addEventListener("click",(async()=>{const t=document.getElementById("game-mode-list");t.innerHTML="";const e=document.createElement("button");e.className="btn btn-success",e.textContent="🎲 전체 랜덤",e.onclick=()=>startGame(null),t.appendChild(e);(await getCategories()).sort(((t,e)=>t.name.localeCompare(e.name,"ko"))).forEach((e=>{const n=document.createElement("button");n.className="btn btn-primary",n.textContent=e.name,n.onclick=()=>startGame(e.name),t.appendChild(n)})),gameModeModal.classList.remove("hidden")}));
+document.getElementById("cancel-modal-btn").addEventListener("click",(()=>{gameModeModal.classList.add("hidden")})),document.getElementById("exit-btn").addEventListener("click",(()=>{showPage("start")})),document.getElementById("manage-data-btn").addEventListener("click",(async()=>{showPage("management"),await renderCategories()})),document.getElementById("back-to-start-btn").addEventListener("click",(()=>{showPage("start")})),document.getElementById("add-category-btn").addEventListener("click",(()=>{const t=prompt("추가할 분류의 이름을 입력하세요:");t&&addCategory(t)}));
+document.getElementById('category-list').addEventListener('click', e => {
+    const target = e.target; const listItem = target.closest('.list-item'); if (!listItem) return;
+    const categoryName = listItem.querySelector('.category-name').textContent;
+    if (target.classList.contains('view-photos-btn')) { renderPhotos(categoryName); } 
+    else if (target.classList.contains('edit-category-btn')) { const newName = prompt('새 분류 이름을 입력하세요:', categoryName); if (newName && newName !== categoryName) updateCategory(categoryName, newName); } 
+    else if (target.classList.contains('delete-category-btn')) { deleteCategory(categoryName); }
+});
+document.getElementById("add-photo-btn").addEventListener("click",(async()=>{const t=document.getElementById("category-select").value,e=document.getElementById("photo-upload"),n=e.files;if(!t)return void alert("분류를 선택해주세요.");if(0===n.length)return void alert("업로드할 사진 파일을 선택해주세요.");const o=Array.from(n).map((e=>addPhoto(t,e)));try{await Promise.all(o),alert(`${n.length}개의 사진이 성공적으로 추가되었습니다.`),e.value="",await renderPhotos(t)}catch(t){console.error("여러 파일 업로드 중 오류 발생:",t),alert("사진을 추가하는 데 실패했습니다.")}})),document.getElementById("photo-list").addEventListener("click",(t=>{if(t.target.classList.contains("delete-photo-btn")){const e=parseInt(t.target.dataset.id),n=t.target.dataset.category;deletePhoto(e,n)}}));
+async function exportData(){try{const t=await getCategories(),e=await getAllPhotos();if(0===t.length&&0===e.length)return void alert("내보낼 데이터가 없습니다.");const n=await Promise.all(e.map((async t=>{const e=await new Promise(((e,n)=>{const o=new FileReader;o.readAsDataURL(t.imageData),o.onload=()=>e(o.result),o.onerror=t=>n(t)}));return{category:t.category,name:t.name,imageData:e}}))),o=JSON.stringify({categories:t,photos:n},null,2),a=new Blob([o],{type:"application/json"}),r=URL.createObjectURL(a),c=document.createElement("a");c.href=r,c.download=`인물게임-백업-${(new Date).toISOString().slice(0,10)}.json`,document.body.appendChild(c),c.click(),document.body.removeChild(c),URL.revokeObjectURL(r),alert("데이터가 파일로 내보내졌습니다! 다운로드 폴더를 확인하세요.")}catch(t){console.error("내보내기 오류:",t),alert("데이터 내보내기 중 오류가 발생했습니다.")}}
+async function importData(t){if(!confirm("정말로 데이터를 가져오시겠습니까? 현재 모든 데이터는 완전히 사라집니다!"))return;try{const e=await t.text(),n=JSON.parse(e);await performTransaction([CATEGORY_STORE,PHOTO_STORE],"readwrite",(async t=>{const e=t.objectStore(CATEGORY_STORE),o=t.objectStore(PHOTO_STORE);await new Promise((t=>{e.clear().onsuccess=t})),await new Promise((t=>{o.clear().onsuccess=t}));for(const a of n.categories)await new Promise((t=>{e.add(a).onsuccess=t}));for(const a of n.photos){const e=await fetch(a.imageData),n=await e.blob(),r=new File([n],a.name,{type:n.type});await new Promise((t=>{o.add({category:a.category,name:a.name,imageData:r}).onsuccess=t}))}})),alert("데이터를 성공적으로 가져왔습니다!"),await renderCategories(),document.getElementById("photo-list-container").classList.add("hidden")}catch(t){console.error("가져오기 오류:",t),alert("데이터 가져오기 중 오류가 발생했습니다. 파일 형식이 올바른지 확인해주세요.")}}
+document.getElementById("export-data-btn").addEventListener("click",exportData),document.getElementById("import-data-btn").addEventListener("click",(()=>document.getElementById("import-data-input").click())),document.getElementById("import-data-input").addEventListener("change",(t=>{t.target.files[0]&&importData(t.target.files[0]),t.target.value=""}));
+</script>
+</body>
+</html>
