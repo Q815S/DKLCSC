@@ -48,7 +48,7 @@
                         background-color 0.35s ease-in-out;
         }
         #info-bar.name-revealed {
-            background-color: var(--success-color);
+            background-color: var(--primary-color);
             min-height: 160px;
         }
         #info-text {
@@ -58,13 +58,9 @@
             text-align: center;
             transition: font-size 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
-        /* ▼▼▼ 글자 크기 수정한 부분 ▼▼▼ */
         #info-bar.name-revealed #info-text {
-            font-size: 3.7em; /* 더 크게! */
+            font-size: 3.7em;
         }
-        /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
-
         #exit-btn {
             grid-column: 3;
             justify-self: end;
@@ -111,7 +107,7 @@
         </div>
     </div>
     <div id="management-page" class="page hidden">
-        <h2>게임 관리</h2><div class="management-section"><h3>분류 관리</h3><div id="category-list"></div><button id="add-category-btn" class="btn btn-success">새 분류 추가</button></div><div class="management-section"><h3>인물 사진 관리</h3><div id="photo-list-container" class="hidden"><h4 id="photo-list-title"></h4><div id="photo-list"></div></div><div class="form-group"><label for="category-select">사진 추가할 분류 선택:</label><select id="category-select"></select><label for="photo-upload" style="margin-top: 15px;">업로드할 사진 선택 (여러 개 선택 가능):</label><input type="file" id="photo-upload" accept="image/*" multiple><button id="add-photo-btn" class="btn btn-success" style="margin-top: 15px;">선택한 사진 추가</button></div></div><div id="data-management-area"><h3>데이터 백업/복구</h3><p style="font-size:0.8em; margin-bottom:10px;">데이터를 파일로 저장하거나, 저장된 파일로 복구할 수 있습니다.</p><button id="export-data-btn" class="btn btn-primary">데이터 내보내기</button><input type="file" id="import-data-input" class="hidden" accept=".json"><button id="import-data-btn" class="btn btn-secondary">데이터 가져오기</button></div><hr style="margin: 30px 0;"><button id="back-to-start-btn" class="btn btn-primary">메인으로 돌아가기</button>
+        <h2>게임 관리</h2><div class="management-section"><h3>분류 관리</h3><div id="category-list"></div><button id="add-category-btn" class="btn btn-success">새 분류 추가</button></div><div class="management-section"><h3>인물 사진 관리</h3><div id="photo-list-container" class="hidden"><h4 id="photo-list-title"></h4><div id="photo-list"></div></div><div class="form-group"><label for="category-select">사진 추가할 분류 선택:</label><select id="category-select"></select><label for="photo-upload" style="margin-top: 15px;">업로드할 사진 선택 (여러 개 선택 가능):</label><input type="file" id="photo-upload" accept="image/*" multiple><button id="add-photo-btn" class="btn btn-success" style="margin-top: 15px;">선택한 사진 추가</button></div></div><div id="data-management-area"><h3>데이터 백업/복구</h3><p style="font-size:0.8em; margin-bottom:10px;">사진을 포함한 모든 데이터를 파일로 저장하거나, 저장된 파일로 복구할 수 있습니다.</p><button id="export-data-btn" class="btn btn-primary">데이터 내보내기</button><input type="file" id="import-data-input" class="hidden" accept=".json"><button id="import-data-btn" class="btn btn-secondary">데이터 가져오기</button></div><hr style="margin: 30px 0;"><button id="back-to-start-btn" class="btn btn-primary">메인으로 돌아가기</button>
     </div>
 </div>
 <div id="game-page" class="hidden">
@@ -132,7 +128,6 @@
 </div>
 
 <script>
-// JavaScript 코드는 이전과 동일합니다.
 const DB_NAME="personGameDB",DB_VERSION=1,CATEGORY_STORE="categories",PHOTO_STORE="photos";let db;function performTransaction(t,e,n){return new Promise(((o,a)=>{const r=db.transaction(t,e);r.oncomplete=t=>o(t),r.onerror=t=>a(t.target.error),n(r)}))}
 function initDB(){return new Promise(((t,e)=>{const n=indexedDB.open(DB_NAME,DB_VERSION);n.onerror=t=>e("DB 에러: "+t.target.errorCode),n.onsuccess=e=>{db=e.target.result,t()},n.onupgradeneeded=t=>{let e=t.target.result;e.objectStoreNames.contains(CATEGORY_STORE)||e.createObjectStore(CATEGORY_STORE,{keyPath:"name"}),e.objectStoreNames.contains(PHOTO_STORE)||e.createObjectStore(PHOTO_STORE,{keyPath:"id",autoIncrement:!0}).createIndex("category","category",{unique:!1})}}))}
 const pages={start:document.getElementById("start-page"),game:document.getElementById("game-page"),management:document.getElementById("management-page")},gameModeModal=document.getElementById("game-mode-modal"),infoBar=document.getElementById("info-bar");
@@ -156,8 +151,13 @@ document.getElementById("start-game-btn").addEventListener("click",(async()=>{co
 document.getElementById("cancel-modal-btn").addEventListener("click",(()=> {gameModeModal.classList.add("hidden")})),document.getElementById("exit-btn").addEventListener("click",(()=>showPage("start"))),document.getElementById("manage-data-btn").addEventListener("click",(async()=>{showPage("management"),await renderCategories()})),document.getElementById("back-to-start-btn").addEventListener("click",(()=>showPage("start"))),document.getElementById("add-category-btn").addEventListener("click",(()=>{const t=prompt("추가할 분류의 이름을 입력하세요:");t&&addCategory(t)}));
 document.getElementById('category-list').addEventListener('click',e=>{const t=e.target,n=t.closest(".list-item");if(!n)return;const o=n.querySelector(".category-name").textContent;t.classList.contains("view-photos-btn")?renderPhotos(o):t.classList.contains("edit-category-btn")?(t=>{const e=prompt("새 분류 이름을 입력하세요:",t);e&&e!==t&&updateCategory(t,e)})(o):t.classList.contains("delete-category-btn")&&deleteCategory(o)});
 document.getElementById("add-photo-btn").addEventListener("click",(async()=>{const t=document.getElementById("category-select").value,e=document.getElementById("photo-upload"),n=e.files;if(!t)return void alert("분류를 선택해주세요.");if(0===n.length)return void alert("업로드할 사진 파일을 선택해주세요.");const o=Array.from(n).map((e=>addPhoto(t,e)));try{await Promise.all(o),alert(`${n.length}개의 사진이 성공적으로 추가되었습니다.`),e.value="",await renderPhotos(t)}catch(t){console.error("여러 파일 업로드 중 오류 발생:",t),alert("사진을 추가하는 데 실패했습니다.")}})),document.getElementById("photo-list").addEventListener("click",(t=>{if(t.target.classList.contains("delete-photo-btn")){const e=parseInt(t.target.dataset.id),n=t.target.dataset.category;deletePhoto(e,n)}}));
+
+// ▼▼▼ 데이터 백업/복구 로직 최종 수정 ▼▼▼
+function promisifyRequest(t){return new Promise(((e,n)=>{t.onsuccess=()=>e(t.result),t.onerror=()=>n(t.error)}))}
 async function exportData(){try{const t=await getCategories(),e=await getAllPhotos();if(0===t.length&&0===e.length)return void alert("내보낼 데이터가 없습니다.");const n=await Promise.all(e.map((async t=>{const e=await new Promise(((e,n)=>{const o=new FileReader;o.readAsDataURL(t.imageData),o.onload=()=>e(o.result),o.onerror=t=>n(t)}));return{category:t.category,name:t.name,imageData:e}}))),o=JSON.stringify({categories:t,photos:n},null,2),a=new Blob([o],{type:"application/json"}),r=URL.createObjectURL(a),c=document.createElement("a");c.href=r,c.download=`인물게임-백업-${(new Date).toISOString().slice(0,10)}.json`,document.body.appendChild(c),c.click(),document.body.removeChild(c),URL.revokeObjectURL(r),alert("데이터가 파일로 내보내졌습니다! 다운로드 폴더를 확인하세요.")}catch(t){console.error("내보내기 오류:",t),alert("데이터 내보내기 중 오류가 발생했습니다.")}}
-async function importData(t){if(!confirm("정말로 데이터를 가져오시겠습니까? 현재 모든 데이터는 완전히 사라집니다!"))return;try{const e=await t.text(),n=JSON.parse(e);await performTransaction([CATEGORY_STORE,PHOTO_STORE],"readwrite",(async t=>{const e=t.objectStore(CATEGORY_STORE),o=t.objectStore(PHOTO_STORE);await new Promise((t=>{e.clear().onsuccess=t})),await new Promise((t=>{o.clear().onsuccess=t}));for(const a of n.categories)await new Promise((t=>{e.add(a).onsuccess=t}));for(const a of n.photos){const e=await fetch(a.imageData),n=await e.blob(),r=new File([n],a.name,{type:n.type});await new Promise((t=>{o.add({category:a.category,name:a.name,imageData:r}).onsuccess=t}))}})),alert("데이터를 성공적으로 가져왔습니다!"),await renderCategories(),document.getElementById("photo-list-container").classList.add("hidden")}catch(t){console.error("가져오기 오류:",t),alert("데이터 가져오기 중 오류가 발생했습니다. 파일 형식이 올바른지 확인해주세요.")}}
+async function importData(t){if(!confirm("정말로 데이터를 가져오시겠습니까? 현재 모든 데이터는 완전히 사라집니다!"))return;try{const e=await t.text(),n=JSON.parse(e);const o=await Promise.all(n.photos.map((async t=>{const e=await fetch(t.imageData),n=await e.blob();return{category:t.category,name:t.name,imageData:new File([n],t.name||`imported-${Date.now()}`,{type:n.type})}})));const a=db.transaction([CATEGORY_STORE,PHOTO_STORE],"readwrite");a.objectStore(CATEGORY_STORE).clear(),a.objectStore(PHOTO_STORE).clear(),n.categories.forEach((t=>{a.objectStore(CATEGORY_STORE).add(t)})),o.forEach((t=>{a.objectStore(PHOTO_STORE).add(t)})),await new Promise(((t,e)=>{a.oncomplete=t,a.onerror=e})),alert("데이터를 성공적으로 가져왔습니다!"),await renderCategories(),document.getElementById("photo-list-container").classList.add("hidden")}catch(t){console.error("가져오기 오류:",t),alert("데이터 가져오기 중 오류가 발생했습니다. 파일 형식이 올바른지 확인해주세요.")}}
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
 document.getElementById("export-data-btn").addEventListener("click",exportData),document.getElementById("import-data-btn").addEventListener("click",(()=>document.getElementById("import-data-input").click())),document.getElementById("import-data-input").addEventListener("change",(t=>{t.target.files[0]&&importData(t.target.files[0]),t.target.value=""}));
 </script>
 </body>
