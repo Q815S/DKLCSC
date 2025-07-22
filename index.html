@@ -32,7 +32,6 @@
         #game-mode-list { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
         #game-mode-list .btn { width: 100%; }
 
-        /* ▼▼▼ 기본(세로 모드) 게임 레이아웃 ▼▼▼ */
         #game-page { display: flex; flex-direction: column; width: 100%; height: 100vh; background-color: #2a2a2a; }
         #info-bar {
             position: relative; z-index: 10;
@@ -63,34 +62,19 @@
         }
         #person-image { width: 100%; height: 100%; border-radius: 15px; box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); object-fit: cover; }
 
-        /* ▼▼▼ 가로 모드일 때 적용될 스타일 ▼▼▼ */
         @media screen and (orientation: landscape) {
             #game-page { flex-direction: row; }
             #info-bar {
-                width: 320px; /* 왼쪽 바 너비 고정 */
-                height: 100vh; min-height: 100vh; /* 높이 꽉 채움 */
-                flex-direction: column; /* 내부 요소 세로 정렬 */
-                justify-content: center; /* 수직 중앙 정렬 */
-                display: flex; /* grid 대신 flex 사용 */
-                transition-property: background-color; /* 색상만 애니메이션 */
+                width: 320px; height: 100vh; min-height: 100vh;
+                flex-direction: column; justify-content: center;
+                display: flex; transition-property: background-color;
             }
-            #info-bar.name-revealed {
-                min-height: 100vh; /* 높이 변화 없음 */
-            }
-            #exit-btn {
-                position: absolute; /* 바 안에서 절대 위치 */
-                top: 15px; right: 15px;
-            }
-            #image-container {
-                margin-top: 0; padding-top: 25px; /* 세로 모드 스타일 초기화 */
-                height: 100vh;
-            }
-            #person-image {
-                object-fit: contain; /* 가로 모드에서는 이미지 잘림 방지 */
-            }
+            #info-bar.name-revealed { min-height: 100vh; }
+            #exit-btn { position: absolute; top: 15px; right: 15px; }
+            #image-container { margin-top: 0; padding-top: 25px; height: 100vh; }
+            #person-image { object-fit: contain; }
         }
         
-        /* 관리 페이지 스타일 */
         .management-section { margin-bottom: 30px; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--light-color); border-radius: 8px; margin-bottom: 8px; word-break: break-all; }
         .list-item span { font-weight: bold; font-size: 1.1em; text-align: left; flex-grow: 1; }
@@ -114,7 +98,39 @@
         </div>
     </div>
     <div id="management-page" class="page hidden">
-        <h2 id="management-title">Settings</h2><div class="management-section"><h3>인물 사진 분류 관리</h3><div id="category-list"></div><button id="add-category-btn" class="btn btn-success">새 분류 추가</button></div><div class="management-section"><h3>인물 사진 추가</h3><div id="photo-list-container" class="hidden"><h4 id="photo-list-title"></h4><div id="photo-list"></div></div><div class="form-group"><label for="category-select">추가할 사진의 분류를 선택하세요:</label><select id="category-select"></select><label for="photo-upload" style="margin-top: 15px;">추가할 사진을 업로드하세요:</label><input type="file" id="photo-upload" accept="image/*" multiple><button id="add-photo-btn" class="btn btn-success" style="margin-top: 15px;">사진 추가하기</button></div></div><div id="data-management-area"><h3>데이터 백업/복구</h3><p style="font-size:0.8em; margin-bottom:10px;">모든 데이터를 파일로 백업할 수 있습니다.</p><button id="export-data-btn" class="btn btn-primary">데이터 내보내기</button><input type="file" id="import-data-input" class="hidden" accept=".json"><button id="import-data-btn" class="btn btn-secondary">데이터 가져오기</button></div><hr style="margin: 30px 0;"><button id="back-to-start-btn" class="btn btn-primary">메인으로 돌아가기</button>
+        <h2 id="management-title">Settings</h2>
+        <div class="management-section">
+            <h3>인물 사진 분류 관리</h3>
+            <div id="category-list"></div>
+            <!-- '새 분류 추가' 버튼은 이미 btn-success 클래스를 가지고 있습니다. -->
+            <button id="add-category-btn" class="btn btn-success">새 분류 추가</button>
+        </div>
+        <div class="management-section">
+            <h3>인물 사진 추가</h3>
+            <div id="photo-list-container" class="hidden">
+                <h4 id="photo-list-title"></h4>
+                <div id="photo-list"></div>
+            </div>
+            <div class="form-group">
+                <label for="category-select">추가할 사진의 분류를 선택하세요:</label>
+                <select id="category-select"></select>
+                <label for="photo-upload" style="margin-top: 15px;">추가할 사진을 업로드하세요:</label>
+                <input type="file" id="photo-upload" accept="image/*" multiple>
+                <button id="add-photo-btn" class="btn btn-success" style="margin-top: 15px;">사진 추가하기</button>
+            </div>
+        </div>
+        <div id="data-management-area">
+            <h3>데이터 백업/복구</h3>
+            <p style="font-size:0.8em; margin-bottom:10px;">모든 데이터를 파일로 백업할 수 있습니다.</p>
+            <!-- ▼▼▼ 클래스 변경: btn-primary -> btn-secondary ▼▼▼ -->
+            <button id="export-data-btn" class="btn btn-secondary">데이터 내보내기</button>
+            <input type="file" id="import-data-input" class="hidden" accept=".json">
+            <!-- ▼▼▼ 클래스 변경: btn-secondary -> btn-success ▼▼▼ -->
+            <button id="import-data-btn" class="btn btn-success">데이터 가져오기</button>
+        </div>
+        <hr style="margin: 30px 0;">
+        <!-- ▼▼▼ 클래스 변경: btn-primary -> btn-success ▼▼▼ -->
+        <button id="back-to-start-btn" class="btn btn-success">메인으로 돌아가기</button>
     </div>
 </div>
 <div id="game-page" class="hidden">
@@ -135,6 +151,7 @@
 </div>
 
 <script>
+// JavaScript 로직은 이전과 동일합니다.
 const DB_NAME="personGameDB",DB_VERSION=1,CATEGORY_STORE="categories",PHOTO_STORE="photos";let db;function performTransaction(t,e,n){return new Promise(((o,a)=>{const r=db.transaction(t,e);r.oncomplete=t=>o(t),r.onerror=t=>a(t.target.error),n(r)}))}
 function initDB(){return new Promise(((t,e)=>{const n=indexedDB.open(DB_NAME,DB_VERSION);n.onerror=t=>e("DB 에러: "+t.target.errorCode),n.onsuccess=e=>{db=e.target.result,t()},n.onupgradeneeded=t=>{let e=t.target.result;e.objectStoreNames.contains(CATEGORY_STORE)||e.createObjectStore(CATEGORY_STORE,{keyPath:"name"}),e.objectStoreNames.contains(PHOTO_STORE)||e.createObjectStore(PHOTO_STORE,{keyPath:"id",autoIncrement:!0}).createIndex("category","category",{unique:!1})}}))}
 const pages={start:document.getElementById("start-page"),game:document.getElementById("game-page"),management:document.getElementById("management-page")},gameModeModal=document.getElementById("game-mode-modal"),infoBar=document.getElementById("info-bar");
@@ -152,61 +169,11 @@ async function renderPhotos(t){const e=await getPhotos(t),n=document.getElementB
 let gameData=[],currentIndex=0,isNameRevealed=!1;
 async function startGame(t=null){if(gameModeModal.classList.add("hidden"),gameData=t?await getPhotos(t):await getAllPhotos(),0===gameData.length){const e=t?`'${t}' 분류에 등록된 사진이 없습니다.`:"게임에 등록된 사진이 없습니다. 먼저 [게임 관리]에서 사진을 추가해주세요.";return void alert(e)}gameData.sort((()=>.5-Math.random())),currentIndex=0,showPage("game"),showPerson(currentIndex)}
 function showPerson(t){const e=gameData[t];infoBar.classList.remove("name-revealed");document.getElementById("info-text").textContent=e.category;const n=document.getElementById("person-image");n.dataset.currentUrl&&URL.revokeObjectURL(n.dataset.currentUrl);const o=URL.createObjectURL(e.imageData);n.src=o,n.dataset.currentUrl=o,isNameRevealed=!1}
-
-// ▼▼▼ 로직 수정: 화면 방향에 따라 애니메이션 분기 처리 ▼▼▼
-document.getElementById("image-container").addEventListener("click",(()=>{
-    if (0 === gameData.length || infoBar.classList.contains("animating")) return;
-
-    const proceedToNext = () => {
-        currentIndex++;
-        if (currentIndex >= gameData.length) {
-            if (confirm("모든 인물을 다 보셨습니다!\n게임을 다시 시작하시겠습니까?\n\n[확인] = 다시하기\n[취소] = 나가기")) {
-                gameData.sort(() => .5 - Math.random());
-                currentIndex = 0;
-                showPerson(currentIndex);
-            } else {
-                showPage("start");
-            }
-        } else {
-            showPerson(currentIndex);
-        }
-        infoBar.classList.remove('animating');
-    };
-
-    if (isNameRevealed) {
-        // 현재 화면 방향 확인 (가로 모드일 때 true)
-        const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-
-        if (isLandscape) {
-            // 가로 모드: 애니메이션 없이 바로 다음으로
-            infoBar.classList.remove("name-revealed");
-            proceedToNext();
-        } else {
-            // 세로 모드: 애니메이션과 함께 다음으로
-            infoBar.classList.add("animating");
-            infoBar.classList.remove("name-revealed");
-            
-            const handleTransitionEnd = (event) => {
-                if (event.propertyName === "min-height") {
-                    infoBar.removeEventListener("transitionend", handleTransitionEnd);
-                    proceedToNext();
-                }
-            };
-            infoBar.addEventListener("transitionend", handleTransitionEnd);
-        }
-    } else {
-        infoBar.classList.add("name-revealed");
-        document.getElementById("info-text").textContent = gameData[currentIndex].name;
-        isNameRevealed = true;
-    }
-}));
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
+document.getElementById("image-container").addEventListener("click",(()=>{if(0===gameData.length||infoBar.classList.contains("animating"))return;if(isNameRevealed){const t=window.matchMedia("(orientation: landscape)").matches;if(t)infoBar.classList.remove("name-revealed"),(()=>{currentIndex++,currentIndex>=gameData.length?confirm("모든 인물을 다 보셨습니다!\n게임을 다시 시작하시겠습니까?\n\n[확인] = 다시하기\n[취소] = 나가기")?(gameData.sort((()=>.5-Math.random())),currentIndex=0,showPerson(currentIndex)):showPage("start"):showPerson(currentIndex),infoBar.classList.remove("animating")})();else{infoBar.classList.add("animating"),infoBar.classList.remove("name-revealed");const t=e=>{e.propertyName==="min-height"&&(infoBar.removeEventListener("transitionend",t),(()=>{currentIndex++,currentIndex>=gameData.length?confirm("모든 인물을 다 보셨습니다!\n게임을 다시 시작하시겠습니까?\n\n[확인] = 다시하기\n[취소] = 나가기")?(gameData.sort((()=>.5-Math.random())),currentIndex=0,showPerson(currentIndex)):showPage("start"):showPerson(currentIndex),infoBar.classList.remove("animating")})())};infoBar.addEventListener("transitionend",t)}}else infoBar.classList.add("name-revealed"),document.getElementById("info-text").textContent=gameData[currentIndex].name,isNameRevealed=!0}));
 document.addEventListener("DOMContentLoaded",(async()=>{try{await initDB(),showPage("start")}catch(t){alert("오류가 발생하여 앱을 시작할 수 없습니다."),console.error(t)}}));
 document.getElementById("start-game-btn").addEventListener("click",(async()=>{const t=document.getElementById("game-mode-list");t.innerHTML="";const e=document.createElement("button");e.className="btn btn-success",e.textContent="🎲 전체 랜덤",e.onclick=()=>startGame(null),t.appendChild(e);(await getCategories()).sort(((t,e)=>t.name.localeCompare(e.name,"ko"))).forEach((e=>{const n=document.createElement("button");n.className="btn btn-primary",n.textContent=e.name,n.onclick=()=>startGame(e.name),t.appendChild(n)})),gameModeModal.classList.remove("hidden")}));
-document.getElementById("cancel-modal-btn").addEventListener("click",(()=> {gameModeModal.classList.add("hidden")})),document.getElementById("exit-btn").addEventListener("click",(()=>showPage("start")));
-const manageDataBtn=document.getElementById("manage-data-btn");manageDataBtn.addEventListener("click",(async()=>{document.getElementById("management-title").textContent=manageDataBtn.textContent,showPage("management"),await renderCategories()}));
-document.getElementById("back-to-start-btn").addEventListener("click",(()=>showPage("start"))),document.getElementById("add-category-btn").addEventListener("click",(()=>{const t=prompt("추가할 분류의 이름을 입력하세요:");t&&addCategory(t)}));
+document.getElementById("cancel-modal-btn").addEventListener("click",(()=> {gameModeModal.classList.add("hidden")})),document.getElementById("exit-btn").addEventListener("click",(()=>showPage("start")));const manageDataBtn=document.getElementById("manage-data-btn");manageDataBtn.addEventListener("click",(async()=>{document.getElementById("management-title").textContent=manageDataBtn.textContent,showPage("management"),await renderCategories()}));
+document.getElementById("back-to-start-btn").addEventListener("click",(()=>showPage("start"))),document.getElementById("add-category-btn").addEventListener("click",(()=>{const t=prompt("새 분류 이름을 입력하세요:");t&&addCategory(t)}));
 document.getElementById('category-list').addEventListener('click',e=>{const t=e.target,n=t.closest(".list-item");if(!n)return;const o=n.querySelector(".category-name").textContent;t.classList.contains("view-photos-btn")?renderPhotos(o):t.classList.contains("edit-category-btn")?(t=>{const e=prompt("새 분류 이름을 입력하세요:",t);e&&e!==t&&updateCategory(t,e)})(o):t.classList.contains("delete-category-btn")&&deleteCategory(o)});
 document.getElementById("add-photo-btn").addEventListener("click",(async()=>{const t=document.getElementById("category-select").value,e=document.getElementById("photo-upload"),n=e.files;if(!t)return void alert("분류를 선택해주세요.");if(0===n.length)return void alert("업로드할 사진 파일을 선택해주세요.");const o=Array.from(n).map((e=>addPhoto(t,e)));try{await Promise.all(o),alert(`${n.length}개의 사진이 성공적으로 추가되었습니다.`),e.value="",await renderPhotos(t)}catch(t){console.error("여러 파일 업로드 중 오류 발생:",t),alert("사진을 추가하는 데 실패했습니다.")}})),document.getElementById("photo-list").addEventListener("click",(t=>{if(t.target.classList.contains("delete-photo-btn")){const e=parseInt(t.target.dataset.id),n=t.target.dataset.category;deletePhoto(e,n)}}));
 function setBackupButtonsState(t){const e=document.getElementById("export-data-btn"),n=document.getElementById("import-data-btn");e.disabled=t,n.disabled=t,n.textContent=t?"가져오는 중...":"데이터 가져오기"}
