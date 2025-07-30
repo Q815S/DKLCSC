@@ -5,21 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>인물 맞추기 게임</title>
     <style>
-        /* ▼▼▼ 새로운 색상 팔레트 적용 ▼▼▼ */
-        :root { 
-            --primary-color: #FD312E;      /* 액티브 레드 */
-            --danger-color: #A50034;       /* 헤리티지 레드 */
-            --dark-color: #000000;         /* 검은색 */
-            --light-color: #f4f4f4;        /* 리스트 아이템 배경 */
-            --secondary-color: #6c757d;    /* 보조 버튼 회색 */
-            --success-color: #FD312E;      /* 긍정 액션 -> 액티브 레드 */
-        }
+        :root { --primary-color: #FD312E; --danger-color: #A50034; --dark-color: #000000; --light-color: #f4f4f4; --secondary-color: #6c757d; --success-color: #FD312E; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { 
-            width: 100%; height: 100%; font-family: 'Malgun Gothic', sans-serif; 
-            background-color: #F0ECE4; /* 따뜻한 회색 배경 */
-        }
-        /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+        html, body { width: 100%; height: 100%; font-family: 'Malgun Gothic', sans-serif; background-color: #F0ECE4; }
         .hidden { display: none !important; }
 
         .container { display: flex; justify-content: center; align-items: center; width: 100%; min-height: 100vh; padding: 15px; }
@@ -37,7 +25,10 @@
         .btn-danger { background-color: var(--danger-color); }
         .btn-success { background-color: var(--success-color); }
         .btn:not(:disabled):hover { opacity: 0.9; transform: translateY(-2px); }
-        .btn-group { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        
+        /* ▼▼▼ 버튼 가로 정렬로 복원 ▼▼▼ */
+        .btn-group { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 90%; width: 400px; }
@@ -90,7 +81,7 @@
         .management-section { margin-bottom: 30px; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--light-color); border-radius: 8px; margin-bottom: 8px; word-break: break-all; }
         .list-item span { font-weight: bold; font-size: 1.1em; text-align: left; flex-grow: 1; }
-        .list-item .btn-group { margin: 0; flex-shrink: 0; margin-left: 10px; }
+        .list-item .btn-group { flex-shrink: 0; margin-left: 10px; } /* 가로 정렬 복원 */
         .list-item .btn { padding: 5px 10px; font-size: 0.9em; }
         .form-group { margin-top: 20px; }
         .form-group label { display: block; margin-bottom: 10px; font-weight: bold; color: #555; }
@@ -115,8 +106,8 @@
         <div class="btn-group">
             <button id="start-manual-game-btn" class="btn btn-primary">게임 시작</button>
             <button id="manage-data-btn" class="btn btn-secondary">Settings</button>
-            <button id="back-to-initial-btn" class="btn" style="margin-top: 20px; background-color: #6c757d;">뒤로 가기</button>
         </div>
+        <button id="back-to-initial-btn" class="btn" style="margin-top: 20px; background-color: #6c757d;">뒤로 가기</button>
     </div>
     <div id="management-page" class="page hidden">
         <h2 id="management-title">Settings</h2>
@@ -168,21 +159,93 @@
 </div>
 
 <script>
-const GITHUB_JSON_URL="https://raw.githubusercontent.com/Q815S/DLKCG-PGG/refs/heads/main/game-data.json";
+const GITHUB_JSON_URL="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPOSITORY/main/game-data.json";
 const DB_NAME="personGameDB",DB_VERSION=1,CATEGORY_STORE="categories",PHOTO_STORE="photos";let db;
 const pages={initial:document.getElementById("initial-page"),manual:document.getElementById("manual-page"),game:document.getElementById("game-page"),management:document.getElementById("management-page")},gameModeModal=document.getElementById("game-mode-modal"),infoBar=document.getElementById("info-bar");
 let sessionGameData=[];
-function performTransaction(t,e,n){return new Promise(((o,a)=>{const r=db.transaction(t,e);r.oncomplete=t=>o(t),r.onerror=t=>a(t.target.error),n(r)}))}
+
+// ▼▼▼ 데이터베이스 함수 안정성 강화 ▼▼▼
+function promisifyRequest(request) {
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
 function initDB(){return new Promise(((t,e)=>{const n=indexedDB.open(DB_NAME,DB_VERSION);n.onerror=t=>e("DB 에러: "+t.target.errorCode),n.onsuccess=e=>{db=e.target.result,t()},n.onupgradeneeded=t=>{let e=t.target.result;e.objectStoreNames.contains(CATEGORY_STORE)||e.createObjectStore(CATEGORY_STORE,{keyPath:"name"}),e.objectStoreNames.contains(PHOTO_STORE)||e.createObjectStore(PHOTO_STORE,{keyPath:"id",autoIncrement:!0}).createIndex("category","category",{unique:!1})}}))}
 function showPage(t){Object.values(pages).forEach(page=>page.classList.add("hidden"));const e=document.querySelector(".container");"start"===t||"manual"===t||"management"===t||"initial"===t?(e.style.display="flex",pages[t].classList.remove("hidden")):"game"===t&&(e.style.display="none",pages[t].classList.remove("hidden"))}
-async function addCategory(t){if(!t||!t.trim())return void alert("분류 이름을 입력해주세요.");try{await performTransaction([CATEGORY_STORE],"readwrite",(e=>e.objectStore(CATEGORY_STORE).add({name:t.trim()}))),await renderCategories()}catch(t){"ConstraintError"===t.name?alert("이미 존재하는 분류 이름입니다."):(console.error("분류 추가 오류:",t),alert("분류 추가 중 오류가 발생했습니다."))}}
-function getCategories(){return new Promise(((t,e)=>{performTransaction([CATEGORY_STORE],"readonly",(n=>{n.objectStore(CATEGORY_STORE).getAll().onsuccess=e=>t(e.target.result)})).catch(e)}))}
-async function updateCategory(t,e){if(!e||!e.trim())return void alert("새 분류 이름을 입력해주세요.");try{await performTransaction([CATEGORY_STORE,PHOTO_STORE],"readwrite",(n=>{const o=n.objectStore(CATEGORY_STORE);o.delete(t),o.add({name:e.trim()});const a=n.objectStore(PHOTO_STORE).index("category").openCursor(IDBKeyRange.only(t));a.onsuccess=t=>{const n=t.target.result;if(n){const t=n.value;t.category=e.trim(),n.update(t),n.continue()}}})),await renderCategories(),document.getElementById("photo-list-container").classList.add("hidden")}catch(t){"ConstraintError"===t.name?alert("이미 존재하는 분류 이름입니다."):(console.error("분류 업데이트 오류:",t),alert("분류 업데이트 중 오류가 발생했습니다."))}}
-async function deleteCategory(t){if(!confirm(`'${t}' 분류를 정말로 삭제하시겠습니까?\n이 분류에 속한 모든 사진도 함께 삭제됩니다.`))return;await performTransaction([CATEGORY_STORE,PHOTO_STORE],"readwrite",(e=>{e.objectStore(CATEGORY_STORE).delete(t);const n=e.objectStore(PHOTO_STORE).index("category").openCursor(IDBKeyRange.only(t));n.onsuccess=t=>{const e=t.target.result;e&&(e.delete(),e.continue())}})),await renderCategories(),document.getElementById("photo-list-container").classList.add("hidden")}
-async function addPhoto(t,e){const n=e.name.split(".").slice(0,-1).join(".")||e.name;return performTransaction([PHOTO_STORE],"readwrite",(o=>{o.objectStore(PHOTO_STORE).add({category:t,name:n,imageData:e})}))}
-function getPhotos(t){return new Promise(((e,n)=>{performTransaction([PHOTO_STORE],"readonly",(o=>{o.objectStore(PHOTO_STORE).index("category").getAll(t).onsuccess=t=>e(t.target.result)})).catch(n)}))}
-function getAllPhotos(){return new Promise(((t,e)=>{performTransaction([PHOTO_STORE],"readonly",(n=>{n.objectStore(PHOTO_STORE).getAll().onsuccess=e=>t(e.target.result)})).catch(e)}))}
-async function deletePhoto(t,e){if(!confirm("이 사진을 정말 삭제하시겠습니까?"))return;await performTransaction([PHOTO_STORE],"readwrite",(e=>e.objectStore(PHOTO_STORE).delete(t))),await renderPhotos(e)}
+async function addCategory(name) {
+    if (!name || !name.trim()) return alert("분류 이름을 입력해주세요.");
+    try {
+        const transaction = db.transaction(CATEGORY_STORE, "readwrite");
+        const store = transaction.objectStore(CATEGORY_STORE);
+        await promisifyRequest(store.add({ name: name.trim() }));
+        await renderCategories();
+    } catch (e) {
+        if (e.name === 'ConstraintError') { alert('이미 존재하는 분류 이름입니다.'); } 
+        else { console.error("분류 추가 오류:", e); alert("분류 추가 중 오류가 발생했습니다."); }
+    }
+}
+async function getCategories() {
+    const transaction = db.transaction(CATEGORY_STORE, "readonly");
+    return await promisifyRequest(transaction.objectStore(CATEGORY_STORE).getAll());
+}
+async function updateCategory(oldName, newName) {
+    if (!newName || !newName.trim()) return alert("새 분류 이름을 입력해주세요.");
+    try {
+        const transaction = db.transaction([CATEGORY_STORE, PHOTO_STORE], "readwrite");
+        const categoryStore = transaction.objectStore(CATEGORY_STORE);
+        const photoStore = transaction.objectStore(PHOTO_STORE);
+        await promisifyRequest(categoryStore.delete(oldName));
+        await promisifyRequest(categoryStore.add({ name: newName.trim() }));
+        const photoIndex = photoStore.index('category');
+        let cursor = await promisifyRequest(photoIndex.openCursor(IDBKeyRange.only(oldName)));
+        while(cursor) {
+            const updateData = cursor.value;
+            updateData.category = newName.trim();
+            cursor.update(updateData);
+            cursor = await promisifyRequest(cursor.continue());
+        }
+        await renderCategories();
+        document.getElementById("photo-list-container").classList.add("hidden");
+    } catch (e) {
+        if (e.name === 'ConstraintError') { alert('이미 존재하는 분류 이름입니다.'); } 
+        else { console.error("분류 업데이트 오류:", e); alert("분류 업데이트 중 오류가 발생했습니다."); }
+    }
+}
+async function deleteCategory(name) {
+    if (!confirm(`'${name}' 분류를 정말로 삭제하시겠습니까?\n이 분류에 속한 모든 사진도 함께 삭제됩니다.`)) return;
+    const transaction = db.transaction([CATEGORY_STORE, PHOTO_STORE], "readwrite");
+    await promisifyRequest(transaction.objectStore(CATEGORY_STORE).delete(name));
+    const photoIndex = transaction.objectStore(PHOTO_STORE).index('category');
+    let cursor = await promisifyRequest(photoIndex.openCursor(IDBKeyRange.only(name)));
+    while(cursor) {
+        cursor.delete();
+        cursor = await promisifyRequest(cursor.continue());
+    }
+    await renderCategories();
+    document.getElementById("photo-list-container").classList.add("hidden");
+}
+async function addPhoto(category, file) {
+    const photoName = file.name.split('.').slice(0, -1).join('.') || file.name;
+    const transaction = db.transaction(PHOTO_STORE, "readwrite");
+    await promisifyRequest(transaction.objectStore(PHOTO_STORE).add({ category, name: photoName, imageData: file }));
+}
+async function getPhotos(category) {
+    const transaction = db.transaction(PHOTO_STORE, "readonly");
+    return await promisifyRequest(transaction.objectStore(PHOTO_STORE).index('category').getAll(category));
+}
+async function getAllPhotos() {
+    const transaction = db.transaction(PHOTO_STORE, "readonly");
+    return await promisifyRequest(transaction.objectStore(PHOTO_STORE).getAll());
+}
+async function deletePhoto(id, category) {
+    if (!confirm("이 사진을 정말 삭제하시겠습니까?")) return;
+    const transaction = db.transaction(PHOTO_STORE, "readwrite");
+    await promisifyRequest(transaction.objectStore(PHOTO_STORE).delete(id));
+    await renderPhotos(category);
+}
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
 async function renderCategories(){const t=await getCategories(),e=document.getElementById("category-list"),n=document.getElementById("category-select");e.innerHTML="",n.innerHTML='<option value="">-- 선택 --</option>',t.sort(((t,e)=>t.name.localeCompare(e.name,"ko"))).forEach((t=>{const o=document.createElement("div");o.className="list-item",o.innerHTML=`<span class="category-name">${t.name}</span><div class="btn-group"><button class="btn btn-primary btn-sm view-photos-btn">사진 보기</button><button class="btn btn-secondary btn-sm edit-category-btn">수정</button><button class="btn btn-danger btn-sm delete-category-btn">삭제</button></div>`,e.appendChild(o);const a=document.createElement("option");a.value=t.name,a.textContent=t.name,n.appendChild(a)}))}
 async function renderPhotos(t){const e=await getPhotos(t),n=document.getElementById("photo-list-container"),o=document.getElementById("photo-list-title"),a=document.getElementById("photo-list");o.textContent=`'${t}' 분류의 사진들`,a.innerHTML="",0===e.length?a.innerHTML='<p style="margin-top:10px;">등록된 사진이 없습니다.</p>':e.forEach((t=>{const e=document.createElement("div");e.className="list-item",e.innerHTML=`<span>${t.name}</span><button class="btn btn-danger btn-sm delete-photo-btn" data-id="${t.id}" data-category="${t.category}">삭제</button>`,a.appendChild(e)})),n.classList.remove("hidden")}
 let gameData=[],currentIndex=0,isNameRevealed=!1;
